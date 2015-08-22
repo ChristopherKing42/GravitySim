@@ -1,5 +1,5 @@
 --All units SI base units
-import Control.Monad (replicateM)
+import Control.Monad (replicateM, forM_)
 import Data.List (insert)
 import System.IO
 import System.Random
@@ -53,15 +53,15 @@ go :: Double -> Double -> Double -> Double -> [Double] -> Int -> IO ()
 go mass time posMax velMax exportTimes qty = do
     points <- fmap concat $ replicateM (qty `div` 2) randPoints
     let frames = iterate (step time (g*mass*mass)) points
-    let ourFrames = map (\t -> (t,(frames !!) . round . (/time)) exportTimes
     forM_ exportTimes $ \t -> do
         writeFile (show t) (format (frames !! (round $ t/time)))
         putStrLn $ "Done with " ++ (show t)
-        where
-            randPoints = do
-                [x, y, x', y'] <- replicateM 4 (randomRIO (-posMax, posMax))
-                [dx, dy] <- replicateM 2 (randomRIO (-velMax, velMax))
-                return [PointMass (Point x y) (Point dx dy), PointMass (Point x' y') (Point (negate dx) (negate dy))]
+
+    where
+        randPoints = do
+            [x, y, x', y'] <- replicateM 4 (randomRIO (-posMax, posMax))
+            [dx, dy] <- replicateM 2 (randomRIO (-velMax, velMax))
+            return [PointMass (Point x y) (Point dx dy), PointMass (Point x' y') (Point (negate dx) (negate dy))]
 
 format :: [PointMass] -> String
-format = unlines $ map (\(PointMass (Point x y) _) -> (show x) ++ ',' ++ (show y))
+format ps = unlines $ map (\(PointMass (Point x y) _) -> (show x) ++ "," ++ (show y)) ps
